@@ -10,7 +10,7 @@ namespace Nancy.Rest.Client
     public class MethodDefinition
     {
         public Type ReturnType { get; set; }
-        public Tuple<string,Type>[] Parameters { get; set; }
+        public List<Tuple<string,Type>> Parameters { get; set; }
 
         public Rest.Annotations.Rest RestAttribute { get; set; }
 
