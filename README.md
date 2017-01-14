@@ -6,7 +6,7 @@ Dynamic proxy client generation for [Nancy](http://nancyfx.org) using [Nancy.Res
 
 A server using [Nancy](http://nancyfx.org) & [Nancy.Rest.Module](https://github.com/maxpiva/Nancy.Rest.Module).
 
-You should read [Nancy.Rest.Module](https://github.com/maxpiva/Nancy.Rest.Module) documentation to understand how it works before continuing reading.
+It is recommended you read the  [Nancy.Rest.Module](https://github.com/maxpiva/Nancy.Rest.Module) documentation to understand how the server mount the services before continuing reading.
 
 ## Installation
 
