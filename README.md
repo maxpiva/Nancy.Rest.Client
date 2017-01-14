@@ -93,7 +93,7 @@ namespace Nancy.Rest.ExampleClient
 
 using System.Collections.Generic;
 
-namespace Nancy.Rest.Annotations.Interfaces
+namespace Nancy.Rest.Client.Interfaces
 {
     public interface IFilter<T>
     {
@@ -108,7 +108,7 @@ namespace Nancy.Rest.Annotations.Interfaces
 
 ```
 
-Create a new interface in your client that includes, both, `IFilter` interface and your server interface.
+Create a new interface in your client that includes, both, [IFilter](https://github.com/maxpiva/Nancy.Rest.Client/blob/master/Interfaces/IFilter.cs) interface and your server interface.
 
 ```csharp
 
@@ -121,7 +121,7 @@ namespace Nancy.Rest.ExampleClient
 
 ```
 
-then you can use the transversal filtering capabilities of the server like this:
+Then you can use the transversal filtering capabilities of the server like this:
 
 
 ```csharp
