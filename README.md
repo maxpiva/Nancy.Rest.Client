@@ -16,18 +16,19 @@ Add server models and the interface with the method signatures to use.
 
 ## Basic Usage
 
-###Your Server signatures:
+####Your Server signatures:
 
-`
+
+```csharp
+
 namespace Nancy.Rest.ExampleServer
 {
     [RestBasePath("/")]
     public interface IExample
     {
-
         [Rest("Person", Verbs.Get)]
         List<Person> GetAllPersons();
-
+        
         [Rest("Person/{personid}", Verbs.Get)]
         Person GetPerson(int personid);
         
@@ -38,11 +39,11 @@ namespace Nancy.Rest.ExampleServer
         bool DeletePerson(int personid);
     }
 }
-`
+```
 
 ###Your Server Models
 
-`
+```csharp
 
 namespace Nancy.Rest.ExampleServer
 {    
@@ -58,11 +59,11 @@ namespace Nancy.Rest.ExampleServer
     }
 }
 
-`
+```
 
 #### Your Client
 
-`
+```csharp
 namespace Nancy.Rest.ExampleClient
 {    
     public class Example
@@ -76,7 +77,7 @@ namespace Nancy.Rest.ExampleClient
         }
     }
 }
-
+```
 
 ##Advanced Usage
 
@@ -90,6 +91,7 @@ TODO
 
 * [JSON.Net](newtonsoft.com/json/) 
 * [RestSharp](http://restsharp.org/)
+* [impromptu-interface](https://github.com/ekonbenefits/impromptu-interface)
 
 ## Credits
 
