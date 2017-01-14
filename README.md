@@ -53,9 +53,11 @@ namespace Nancy.Rest.ExampleServer
 
         public string LastName { get; set; }
         
+        [Level(1)]
         public bool IsProgrammer { get; set; }
         
-        public List<string> Tags { get; set; }
+        [Tags("Attr")]
+        public List<string> Attributes { get; set; }
     }
 }
 
@@ -64,6 +66,7 @@ namespace Nancy.Rest.ExampleServer
 #### Your Client
 
 ```csharp
+
 namespace Nancy.Rest.ExampleClient
 {    
     public class Example
@@ -72,14 +75,81 @@ namespace Nancy.Rest.ExampleClient
         {
             IExample server=ClientFactory.Create<IExample>("http://yourserver/api"); `
         
-            List<Person> persons=server.GetPersons();            
+            List<Person> persons=server.GetPersons();
             
         }
     }
 }
+
 ```
 
 ##Advanced Usage
+
+###Transversal Filtering
+
+Nancy.Rest.Client includes this interface.
+
+```csharp
+
+using System.Collections.Generic;
+
+namespace Nancy.Rest.Annotations.Interfaces
+{
+    public interface IFilter<T>
+    {
+        T FilterWithLevel(int level);
+
+        T FilterWithTags(IEnumerable<string> tags);
+
+        T FilterWithLevelAndTags(int level, IEnumerable<string> tags);
+
+    }
+}
+
+```
+
+Create a new interface in your client that includes, both, `IFilter` interface and your server interface.
+
+```csharp
+
+namespace Nancy.Rest.ExampleClient
+{    
+    public interface IExampleWithFiltering : IExample, IFilter<IExample>
+    {
+    }
+}
+
+```
+
+then you can use the transversal filtering capabilities of the server like this:
+
+
+```csharp
+
+namespace Nancy.Rest.ExampleClient
+{    
+    public class Example
+    {
+        public void Run()
+        {
+            IExampleWithFiltering server=ClientFactory.Create<IExampleWithFiltering>("http://yourserver/api"); `
+        
+            //Per example, you can ask the server to not serialize the IsProgrammer property using levels, limiting the Level to 0.
+             List<Person> persons=server.FilterWithLevel(0).GetPersons();
+            //Or remove the Attributes property using the ExcludeTags.            
+            List<Person> persons=server.FilterWithTags(new string[] { "attr"}).GetPersons();            
+            
+        }
+    }
+}
+
+```
+
+
+following interface to your project
+
+````csharp
+
 
 TODO
 
@@ -99,6 +169,6 @@ TODO
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
+This project is licensed under the MIT License - see the [LICENSE](LICENSE.md) file for details
 
 
