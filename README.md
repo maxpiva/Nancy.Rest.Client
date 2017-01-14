@@ -134,9 +134,10 @@ namespace Nancy.Rest.ExampleClient
         {
             IExampleWithFiltering server=ClientFactory.Create<IExampleWithFiltering>("http://yourserver/api"); `
         
-            //Per example, you can ask the server to not serialize the IsProgrammer property using levels, limiting the Level to 0.
-             List<Person> persons=server.FilterWithLevel(0).GetPersons();
-            //Or remove the Attributes property using the ExcludeTags.            
+            //Per example, you can ask the server to not serialize any property with level bigger than the number provided.
+            //Here we can filter the IsProgrammer property using levels.
+            List<Person> persons=server.FilterWithLevel(0).GetPersons();
+            //Or remove the Attributes property using Tags.            
             List<Person> persons=server.FilterWithTags(new string[] { "attr"}).GetPersons();            
             
         }
@@ -145,13 +146,45 @@ namespace Nancy.Rest.ExampleClient
 
 ```
 
+###Controlable deserialization
 
-following interface to your project
+Imagine you have your poco models from the server, but you need to add some properties, methods or INotifyPropertyChanged to that objects, you create a child class from the model, and add all those things. The problem is, the deserialzer will deserialize your poco model, so you have to create a new child class, and copy all properties to your child. Nancy.Rest.Client have the capability of deserializing the objects to child objects.
 
-````csharp
+####Client model
+```csharp
 
+namespace Nancy.Rest.ExampleClient
+{    
+    public class ClientPerson : Person
+    {
+        public bool IsSuperman { get; set; }
+        
+        public void DoSomeNastyThings()
+        {
+        //Kidding
+        }
+    }
+}
 
-TODO
+```
+
+```csharp
+
+namespace Nancy.Rest.ExampleClient
+{    
+    public class Example
+    {
+        public void Run()
+        {
+            Dictionary<Type,Type> mappings=new Dictionary<Type,Type>();
+            //Here we add the mapping, we want every person to be deserialized as ClientPerson
+            mappings.Add(typeof(Person), typeof(ClientPerson));
+            IExample server=ClientFactory.Create<IExample>("http://yourserver/api", mappings); `
+            //Here is your list of client persons
+            List<ClientPerson> persons=server.GetPersons().Cast<ClientPerson>.ToList();
+        }
+    }
+}
 
 ## History
 
