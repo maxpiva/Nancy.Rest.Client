@@ -190,6 +190,14 @@ namespace Nancy.Rest.ExampleClient
 
 ```
 
+##WARNING
+
+THIS IS AN ALPHA VERSION, use at your own risk.
+
+## TODO
+
+* Fill the blanks :P
+
 ## History
 
 **1.4.3-Alpha**: First Release
