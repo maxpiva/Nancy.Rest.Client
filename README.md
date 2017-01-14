@@ -1,6 +1,6 @@
 # Nancy.Rest.Client
 
-Dynamic proxy client generation for Nancy.
+Dynamic proxy client generation for [Nancy](http://nancyfx.org) using [Nancy.Rest.Module](https://github.com/maxpiva/Nancy.Rest.Module).
 
 ## Prerequisites
 
