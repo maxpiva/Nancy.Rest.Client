@@ -23,7 +23,7 @@ Add your server models and interface with the method signatures to use.
 
 namespace Nancy.Rest.ExampleServer
 {
-    [RestBasePath("/")]
+    [RestBasePath("/api")]
     public interface IExample
     {
         [Rest("Person", Verbs.Get)]
