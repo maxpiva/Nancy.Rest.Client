@@ -4,13 +4,13 @@ Dynamic proxy client generation for Nancy.
 
 ## Prerequisites
 
-A server using Nancy & Nancy.Rest.Module.
+A server using [Nancy](http://nancyfx.org) & [Nancy.Rest.Module](https://github.com/maxpiva/Nancy.Rest.Module).
 
-You should read Nancy.Rest.Module documentation to understand how it works before continuing reading.
+You should read [Nancy.Rest.Module](https://github.com/maxpiva/Nancy.Rest.Module) documentation to understand how it works before continuing reading.
 
 ## Installation
 
-Add Nancy.Rest.Client and Nancy.Rest.Annotations to your client project.
+Add [Nancy.Rest.Client](https://github.com/maxpiva/Nancy.Rest.Client) and [Nancy.Rest.Annotations](https://github.com/maxpiva/NNancy.Rest.Annotations) to your client project.
 
 Add server models and the interface with the method signatures to use.
 
@@ -87,7 +87,7 @@ namespace Nancy.Rest.ExampleClient
 
 ###Transversal Filtering
 
-Nancy.Rest.Client includes this interface.
+[Nancy.Rest.Client](https://github.com/maxpiva/Nancy.Rest.Client) includes this interface.
 
 ```csharp
 
@@ -138,7 +138,7 @@ namespace Nancy.Rest.ExampleClient
             //Here we can filter the IsProgrammer property using levels.
             List<Person> persons=server.FilterWithLevel(0).GetPersons();
             //Or remove the Attributes property using Tags.            
-            List<Person> persons=server.FilterWithTags(new string[] { "attr"}).GetPersons();            
+            List<Person> persons=server.FilterWithTags(new string[] { "Attr"}).GetPersons();            
             
         }
     }
@@ -151,6 +151,7 @@ namespace Nancy.Rest.ExampleClient
 Imagine you have your poco models from the server, but you need to add some properties, methods or INotifyPropertyChanged to that objects, you create a child class from the model, and add all those things. The problem is, the deserialzer will deserialize your poco model, so you have to create a new child class, and copy all properties to your child. Nancy.Rest.Client have the capability of deserializing the objects to child objects.
 
 ####Client model
+
 ```csharp
 
 namespace Nancy.Rest.ExampleClient
@@ -167,6 +168,7 @@ namespace Nancy.Rest.ExampleClient
 }
 
 ```
+####Example
 
 ```csharp
 
@@ -185,6 +187,8 @@ namespace Nancy.Rest.ExampleClient
         }
     }
 }
+
+```
 
 ## History
 
