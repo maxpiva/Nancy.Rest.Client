@@ -45,7 +45,7 @@ namespace Nancy.Rest.Client
                     }
                 }
             }
-            bool hasfilterinterface = (typeof(T).GetInterfaces().Any(a => a.Name == typeof(IFilter<>).Name));
+            bool hasfilterinterface = (typeof(T).GetInterfaces().Any(a => a.Name == typeof(Interfaces.IFilter<>).Name));
             List<Type> ifaces=new List<Type>() { typeof(T)};
             ifaces.AddRange(typeof(T).GetInterfaces());
             foreach (MethodInfo m in ifaces.SelectMany(a=>a.GetMethods()))
