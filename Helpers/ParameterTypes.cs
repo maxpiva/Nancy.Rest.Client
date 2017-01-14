@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Nancy.Rest.Client
+namespace Nancy.Rest.Client.Helpers
 {
 
-    public class ParameterType
+    internal class ParameterType
     {
         public static List<ParameterType> InstanceTypes = new List<ParameterType>()
         {
@@ -242,11 +240,5 @@ namespace Nancy.Rest.Client
 
         public Func<object, string, string, bool, ParameterResult> Convert;
 
-    }
-    public class ParameterResult
-    {
-        public bool Success { get; set; }
-        public string Value { get; set; }
-        public string Error { get; set; }
     }
 }

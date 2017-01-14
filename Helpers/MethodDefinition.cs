@@ -1,18 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Nancy.Rest.Annotations;
 
-namespace Nancy.Rest.Client
+namespace Nancy.Rest.Client.Helpers
 {
-    public class MethodDefinition
+    internal class MethodDefinition
     {
         public Type ReturnType { get; set; }
         public List<Tuple<string,Type>> Parameters { get; set; }
 
-        public Rest.Annotations.Rest RestAttribute { get; set; }
+        public Annotations.Atributes.Rest RestAttribute { get; set; }
 
         public string BasePath { get; set; }
     }
