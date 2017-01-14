@@ -10,7 +10,7 @@ It is recommended you read the  [Nancy.Rest.Module](https://github.com/maxpiva/N
 
 ## Installation
 
-Add [Nancy.Rest.Client](https://github.com/maxpiva/Nancy.Rest.Client) and [Nancy.Rest.Annotations](https://github.com/maxpiva/NNancy.Rest.Annotations) to your client project.
+Add [Nancy.Rest.Client](https://github.com/maxpiva/Nancy.Rest.Client) and [Nancy.Rest.Annotations](https://github.com/maxpiva/Nancy.Rest.Annotations) to your client project.
 
 Add your server models and interface with the method signatures to use.
 
