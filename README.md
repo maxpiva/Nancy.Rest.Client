@@ -121,7 +121,7 @@ namespace Nancy.Rest.ExampleClient
 
 ```
 
-then you can use the transversal filtering capabilities of the server like this:
+Then you can use the transversal filtering capabilities of the server like this:
 
 
 ```csharp
