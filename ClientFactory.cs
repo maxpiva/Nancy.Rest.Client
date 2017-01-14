@@ -8,7 +8,6 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ImpromptuInterface;
 using ImpromptuInterface.Dynamic;
-using Nancy.Rest.Annotations.Interfaces;
 using Nancy.Rest.Client.ContractResolver;
 using Nancy.Rest.Client.Exceptions;
 using Nancy.Rest.Client.Helpers;
