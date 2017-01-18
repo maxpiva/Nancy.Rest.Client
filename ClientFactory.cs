@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ImpromptuInterface;
 using ImpromptuInterface.Dynamic;
-using Nancy.Rest.Annotations.Interfaces;
+using Nancy.Rest.Annotations.Atributes;
 using Nancy.Rest.Client.ContractResolver;
 using Nancy.Rest.Client.Exceptions;
 using Nancy.Rest.Client.Helpers;
@@ -23,12 +23,21 @@ namespace Nancy.Rest.Client
 
         public static T Create<T>(string path, Dictionary<Type, Type> deserializationmappings=null, string defaultlevelqueryparametername="level", string defaultexcludtagsqueryparametername="excludetags") where T : class
         {
+            List<RestBasePath> paths = typeof(T).GetCustomAttributesFromInterfaces<RestBasePath>().ToList();
+            if (paths.Count > 0)
+            {
+                string s = paths[0].BasePath;
+                if (path.EndsWith("/"))
+                    path = path.Substring(0, path.Length - 1);
+                if (s.StartsWith("/"))
+                    s = s.Substring(1);
+                path = path + "/" + s;
+            }
             return Create<T>(path, int.MaxValue, null, deserializationmappings,defaultlevelqueryparametername, defaultexcludtagsqueryparametername);
         }
         private static T Create<T>(string path, int level, IEnumerable<string> tags, Dictionary<Type, Type> deserializationmappings, string defaultlevelqueryparametername, string defaultexcludtagsqueryparametername, bool filter=true) where T: class
         {
             dynamic dexp = new ExpandoObject();
-
             IDictionary<string, object> exp = (IDictionary<string, object>) dexp;
             dexp.DYN_defaultlevelqueryparametername = defaultlevelqueryparametername;
             dexp.DYN_defaultexcludtagsqueryparametername = defaultexcludtagsqueryparametername;
