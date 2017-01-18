@@ -38,6 +38,7 @@ namespace Nancy.Rest.Client
         private static T Create<T>(string path, int level, IEnumerable<string> tags, Dictionary<Type, Type> deserializationmappings, string defaultlevelqueryparametername, string defaultexcludtagsqueryparametername, bool filter=true) where T: class
         {
             dynamic dexp = new ExpandoObject();
+
             IDictionary<string, object> exp = (IDictionary<string, object>) dexp;
             dexp.DYN_defaultlevelqueryparametername = defaultlevelqueryparametername;
             dexp.DYN_defaultexcludtagsqueryparametername = defaultexcludtagsqueryparametername;
