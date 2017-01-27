@@ -2,13 +2,17 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Dynamic;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ImpromptuInterface;
 using ImpromptuInterface.Dynamic;
 using Nancy.Rest.Annotations.Atributes;
+using Nancy.Rest.Annotations.Enums;
 using Nancy.Rest.Client.ContractResolver;
 using Nancy.Rest.Client.Exceptions;
 using Nancy.Rest.Client.Helpers;
@@ -165,11 +169,40 @@ namespace Nancy.Rest.Client
 
         private static dynamic DoSyncClient(dynamic dexp, MethodDefinition def, params dynamic[] parameters)
         {
+            if (def.ReturnType.IsAssignableFrom(typeof(Stream)))
+            {
+                Tuple<Uri, byte[], Verbs> reqs = CreateStreamRequest(dexp, def, parameters);
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = reqs.Item1;
+                    client.Timeout = TimeSpan.FromMinutes(1);
+                    HttpRequestMessage request = new HttpRequestMessage(reqs.Item3.ToHttpMethod(), reqs.Item1);
+                    return Task.Run(async () =>
+                    {
+                        HttpResponseMessage response = await client.SendAsync(request);
+                        response.EnsureSuccessStatusCode();
+                        return await response.Content.ReadAsStreamAsync();
+                    }).Result;
+                }
+            }
             Tuple<RestRequest, RestClient, JsonSerializerSettings> req = CreateRequest(dexp, def, parameters);
             return ProcessReturn(req.Item3, req.Item2.Execute(req.Item1), def.ReturnType);
         }
         private static async Task<dynamic> DoAsyncClient(dynamic dexp, MethodDefinition def, params dynamic[] parameters)
         {
+            if (def.ReturnType.IsAssignableFrom(typeof(Stream)))
+            {
+                Tuple<Uri, byte[], Verbs> reqs = CreateStreamRequest(dexp, def, parameters);
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = reqs.Item1;
+                    client.Timeout = TimeSpan.FromMinutes(1);
+                    HttpRequestMessage request = new HttpRequestMessage(reqs.Item3.ToHttpMethod(), reqs.Item1);
+                    HttpResponseMessage response = await client.SendAsync(request);
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadAsStreamAsync();
+                }
+            }
             Tuple<RestRequest, RestClient, JsonSerializerSettings> req = CreateRequest(dexp, def, parameters);
             return ProcessReturn(req.Item3, await req.Item2.ExecuteTaskAsync(req.Item1), def.ReturnType);
         }
@@ -194,8 +227,31 @@ namespace Nancy.Rest.Client
                 req.AddQueryParameter(defaultexcludtagsqueryparametername, string.Join("'", tags));
             if (tup.Item2 != null)
                 req.AddBody(tup.Item2);
-            req.RequestFormat = DataFormat.Json;
+            req.RequestFormat = DataFormat.Json;            
             return new Tuple<RestRequest, RestClient, JsonSerializerSettings>(req,cl,set);
+        }
+
+        private static Tuple<Uri, byte[], Verbs> CreateStreamRequest(dynamic dexp, MethodDefinition def, dynamic[] parameters)
+        {
+            string defaultlevelqueryparametername = dexp.DYN_defaultlevelqueryparametername;
+            string defaultexcludtagsqueryparametername = dexp.DYN_defaultexcludtagsqueryparametername;
+            int level = dexp.DYN_level;
+            List<string> tags = dexp.DYN_tags;
+            JsonSerializerSettings set = new JsonSerializerSettings();
+            if (dexp.DYN_deserializationmappings != null)
+                set.ContractResolver = new MappedContractResolver((Dictionary<Type, Type>)dexp.DYN_deserializationmappings);
+            RestClient cl = new RestClient(def.BasePath);
+            Tuple<string, object> tup = ProcessPath(def.RestAttribute.Route, def, parameters);
+            RestRequest req = new RestRequest(tup.Item1, def.RestAttribute.Verb.ToMethod());
+            if (level != int.MaxValue)
+                req.AddQueryParameter(defaultlevelqueryparametername, level.ToString());
+            if (tags != null && tags.Count > 0)
+                req.AddQueryParameter(defaultexcludtagsqueryparametername, string.Join("'", tags));
+            Uri uri = cl.BuildUri(req);
+            byte[] data = null;
+            if (tup.Item2 != null)
+                data=Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(tup.Item2));
+            return new Tuple<Uri, byte[], Verbs>(uri,data,def.RestAttribute.Verb);
         }
         private static dynamic ProcessReturn(JsonSerializerSettings set, IRestResponse ret, Type returntype)
         {
