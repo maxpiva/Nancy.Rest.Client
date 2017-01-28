@@ -177,6 +177,8 @@ namespace Nancy.Rest.Client
                     client.BaseAddress = reqs.Item1;
                     client.Timeout = TimeSpan.FromMinutes(1);
                     HttpRequestMessage request = new HttpRequestMessage(reqs.Item3.ToHttpMethod(), reqs.Item1);
+                    if (reqs.Item2 != null)
+                        request.Content = new ByteArrayContent(reqs.Item2);
                     return Task.Run(async () =>
                     {
                         HttpResponseMessage response = await client.SendAsync(request);
@@ -198,6 +200,8 @@ namespace Nancy.Rest.Client
                     client.BaseAddress = reqs.Item1;
                     client.Timeout = TimeSpan.FromMinutes(1);
                     HttpRequestMessage request = new HttpRequestMessage(reqs.Item3.ToHttpMethod(), reqs.Item1);
+                    if (reqs.Item2!=null)
+                        request.Content=new ByteArrayContent(reqs.Item2);
                     HttpResponseMessage response = await client.SendAsync(request);
                     response.EnsureSuccessStatusCode();
                     return await response.Content.ReadAsStreamAsync();
@@ -237,7 +241,7 @@ namespace Nancy.Rest.Client
             string defaultexcludtagsqueryparametername = dexp.DYN_defaultexcludtagsqueryparametername;
             int level = dexp.DYN_level;
             List<string> tags = dexp.DYN_tags;
-            JsonSerializerSettings set = new JsonSerializerSettings();
+            JsonSerializerSettings set = new JsonSerializerSettings {ReferenceLoopHandling = ReferenceLoopHandling.Serialize};
             if (dexp.DYN_deserializationmappings != null)
                 set.ContractResolver = new MappedContractResolver((Dictionary<Type, Type>)dexp.DYN_deserializationmappings);
             RestClient cl = new RestClient(def.BasePath);
