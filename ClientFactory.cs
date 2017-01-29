@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Dynamic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -169,6 +170,8 @@ namespace Nancy.Rest.Client
 
         private static dynamic DoSyncClient(dynamic dexp, MethodDefinition def, params dynamic[] parameters)
         {
+
+
             if (def.ReturnType.IsAssignableFrom(typeof(Stream)))
             {
                 Tuple<Uri, byte[], Verbs> reqs = CreateStreamRequest(dexp, def, parameters);
@@ -189,6 +192,7 @@ namespace Nancy.Rest.Client
             }
             Tuple<RestRequest, RestClient, JsonSerializerSettings> req = CreateRequest(dexp, def, parameters);
             return ProcessReturn(req.Item3, req.Item2.Execute(req.Item1), def.ReturnType);
+
         }
         private static async Task<dynamic> DoAsyncClient(dynamic dexp, MethodDefinition def, params dynamic[] parameters)
         {
@@ -230,8 +234,8 @@ namespace Nancy.Rest.Client
             if (tags != null && tags.Count > 0)
                 req.AddQueryParameter(defaultexcludtagsqueryparametername, string.Join("'", tags));
             if (tup.Item2 != null)
-                req.AddBody(tup.Item2);
-            req.RequestFormat = DataFormat.Json;            
+                req.AddJsonBody(tup.Item2);
+            req.RequestFormat = DataFormat.Json;   
             return new Tuple<RestRequest, RestClient, JsonSerializerSettings>(req,cl,set);
         }
 
@@ -320,11 +324,19 @@ namespace Nancy.Rest.Client
                     }
                     else
                     {
-                        TypeConverter c = TypeDescriptor.GetConverter(par.GetType());
-                        if (c.CanConvertTo(typeof(string)))
-                            p.Value = c.ConvertToInvariantString(par);
+                        if (par is DateTime)
+                        {
+                            p.Value = ((DateTime) par).ToString("o",CultureInfo.InvariantCulture);
+                        }
                         else
-                            throw new Exception("Unable to convert parameter '" + value + "' to string");
+                        {
+                            TypeConverter c = TypeDescriptor.GetConverter(par.GetType());
+                            if (c.CanConvertTo(typeof(string)))
+                                p.Value = c.ConvertToInvariantString(par);
+                            else
+                                throw new Exception("Unable to convert parameter '" + value + "' to string");
+                        }
+  
                     }
                     pars.Add(p);
                 }
