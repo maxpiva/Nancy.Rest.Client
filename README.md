@@ -205,7 +205,6 @@ THIS IS AN ALPHA VERSION, use at your own risk.
 ## Built With
 
 * [JSON.Net](newtonsoft.com/json/) 
-* [RestSharp](http://restsharp.org/)
 * [impromptu-interface](https://github.com/ekonbenefits/impromptu-interface)
 
 ## Credits
