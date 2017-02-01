@@ -209,7 +209,7 @@ THIS IS AN ALPHA VERSION, use at your own risk.
 
 ## Credits
 
-* **Maximo Piva** -[maxpiva](https://github.com/maxpiva)
+* **Maximo Piva** - [maxpiva](https://github.com/maxpiva)
 
 ## License
 
