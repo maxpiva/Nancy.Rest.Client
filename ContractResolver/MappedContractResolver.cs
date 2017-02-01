@@ -17,7 +17,7 @@ namespace Nancy.Rest.Client.ContractResolver
             return base.ResolveContract(type);
         }
 
-        public Type ReplaceType(Type t)
+        private Type ReplaceType(Type t)
         {
             if (t.GenericTypeArguments.Length > 0)
             {

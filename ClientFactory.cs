@@ -3,22 +3,17 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Dynamic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ImpromptuInterface;
 using ImpromptuInterface.Dynamic;
 using Nancy.Rest.Annotations.Atributes;
-using Nancy.Rest.Annotations.Enums;
 using Nancy.Rest.Client.ContractResolver;
-using Nancy.Rest.Client.Exceptions;
 using Nancy.Rest.Client.Helpers;
+using Nancy.Rest.Client.Rest;
 using Newtonsoft.Json;
-using RestSharp;
 using ParameterType = Nancy.Rest.Client.Helpers.ParameterType;
 
 namespace Nancy.Rest.Client
@@ -26,7 +21,7 @@ namespace Nancy.Rest.Client
     public class ClientFactory
     {
 
-        public static T Create<T>(string path, Dictionary<Type, Type> deserializationmappings=null, string defaultlevelqueryparametername="level", string defaultexcludtagsqueryparametername="excludetags") where T : class
+        public static T Create<T>(string path, Dictionary<Type, Type> deserializationmappings=null, string defaultlevelqueryparametername="level", string defaultexcludtagsqueryparametername="excludetags", int defaulttimeoutinseconds=60) where T : class
         {
             List<RestBasePath> paths = typeof(T).GetCustomAttributesFromInterfaces<RestBasePath>().ToList();
             if (paths.Count > 0)
@@ -38,9 +33,9 @@ namespace Nancy.Rest.Client
                     s = s.Substring(1);
                 path = path + "/" + s;
             }
-            return Create<T>(path, int.MaxValue, null, deserializationmappings,defaultlevelqueryparametername, defaultexcludtagsqueryparametername);
+            return Create<T>(path, int.MaxValue, null, deserializationmappings,defaultlevelqueryparametername, defaultexcludtagsqueryparametername,defaulttimeoutinseconds);
         }
-        private static T Create<T>(string path, int level, IEnumerable<string> tags, Dictionary<Type, Type> deserializationmappings, string defaultlevelqueryparametername, string defaultexcludtagsqueryparametername, bool filter=true) where T: class
+        private static T Create<T>(string path, int level, IEnumerable<string> tags, Dictionary<Type, Type> deserializationmappings, string defaultlevelqueryparametername, string defaultexcludtagsqueryparametername, int defaulttimeoutinseconds,bool filter=true) where T: class
         {
             dynamic dexp = new ExpandoObject();
 
@@ -50,6 +45,7 @@ namespace Nancy.Rest.Client
             dexp.DYN_level = level;
             dexp.DYN_tags = tags;
             dexp.DYN_deserializationmappings = deserializationmappings;
+            dexp.DYN_defaulttimeoutinseconds = defaulttimeoutinseconds;
             if (filter && deserializationmappings != null)
             {
                 foreach (Type t in deserializationmappings.Keys)
@@ -154,9 +150,9 @@ namespace Nancy.Rest.Client
             {
                 if (filter)
                 {
-                    exp["FilterWithLevel"] = Return<T>.Arguments<int>((a) => Create<T>(path, a, null, deserializationmappings, defaultlevelqueryparametername, defaultexcludtagsqueryparametername, false));
-                    exp["FilterWithTags"] = Return<T>.Arguments<IEnumerable<string>>((a) => Create<T>(path, int.MaxValue, a, deserializationmappings, defaultlevelqueryparametername, defaultexcludtagsqueryparametername, false));
-                    exp["FilterWithLevelAndTags"] = Return<T>.Arguments<int, IEnumerable<string>>((a, b) => Create<T>(path, a, b, deserializationmappings, defaultlevelqueryparametername, defaultexcludtagsqueryparametername, false));
+                    exp["FilterWithLevel"] = Return<T>.Arguments<int>((a) => Create<T>(path, a, null, deserializationmappings, defaultlevelqueryparametername, defaultexcludtagsqueryparametername, defaulttimeoutinseconds, false));
+                    exp["FilterWithTags"] = Return<T>.Arguments<IEnumerable<string>>((a) => Create<T>(path, int.MaxValue, a, deserializationmappings, defaultlevelqueryparametername, defaultexcludtagsqueryparametername, defaulttimeoutinseconds, false));
+                    exp["FilterWithLevelAndTags"] = Return<T>.Arguments<int, IEnumerable<string>>((a, b) => Create<T>(path, a, b, deserializationmappings, defaultlevelqueryparametername, defaultexcludtagsqueryparametername, defaulttimeoutinseconds, false));
                 }
                 else
                 {
@@ -170,121 +166,48 @@ namespace Nancy.Rest.Client
 
         private static dynamic DoSyncClient(dynamic dexp, MethodDefinition def, params dynamic[] parameters)
         {
-
-
-            if (def.ReturnType.IsAssignableFrom(typeof(Stream)))
-            {
-                Tuple<Uri, byte[], Verbs> reqs = CreateStreamRequest(dexp, def, parameters);
-                using (var client = new HttpClient())
-                {
-                    client.BaseAddress = reqs.Item1;
-                    client.Timeout = TimeSpan.FromMinutes(1);
-                    HttpRequestMessage request = new HttpRequestMessage(reqs.Item3.ToHttpMethod(), reqs.Item1);
-                    if (reqs.Item2 != null)
-                        request.Content = new ByteArrayContent(reqs.Item2);
-                    return Task.Run(async () =>
-                    {
-                        HttpResponseMessage response = await client.SendAsync(request);
-                        response.EnsureSuccessStatusCode();
-                        return await response.Content.ReadAsStreamAsync();
-                    }).Result;
-                }
-            }
-            Tuple<RestRequest, RestClient, JsonSerializerSettings> req = CreateRequest(dexp, def, parameters);
-            return ProcessReturn(req.Item3, req.Item2.Execute(req.Item1), def.ReturnType);
-
+            Request req = CreateRequest(dexp, def, parameters);
+            return Task.Run(async () => await SmallWebClient.RestRequest(req)).Result;
         }
         private static async Task<dynamic> DoAsyncClient(dynamic dexp, MethodDefinition def, params dynamic[] parameters)
         {
-            if (def.ReturnType.IsAssignableFrom(typeof(Stream)))
-            {
-                Tuple<Uri, byte[], Verbs> reqs = CreateStreamRequest(dexp, def, parameters);
-                using (var client = new HttpClient())
-                {
-                    client.BaseAddress = reqs.Item1;
-                    client.Timeout = TimeSpan.FromMinutes(1);
-                    HttpRequestMessage request = new HttpRequestMessage(reqs.Item3.ToHttpMethod(), reqs.Item1);
-                    if (reqs.Item2!=null)
-                        request.Content=new ByteArrayContent(reqs.Item2);
-                    HttpResponseMessage response = await client.SendAsync(request);
-                    response.EnsureSuccessStatusCode();
-                    return await response.Content.ReadAsStreamAsync();
-                }
-            }
-            Tuple<RestRequest, RestClient, JsonSerializerSettings> req = CreateRequest(dexp, def, parameters);
-            return ProcessReturn(req.Item3, await req.Item2.ExecuteTaskAsync(req.Item1), def.ReturnType);
+            Request req = CreateRequest(dexp, def, parameters);
+            return await SmallWebClient.RestRequest(req);
         }
 
-        private static Tuple<RestRequest,RestClient, JsonSerializerSettings> CreateRequest(dynamic dexp, MethodDefinition def, dynamic[] parameters)
+        private static Request CreateRequest(dynamic dexp, MethodDefinition def, dynamic[] parameters)
         {
             string defaultlevelqueryparametername = dexp.DYN_defaultlevelqueryparametername;
             string defaultexcludtagsqueryparametername = dexp.DYN_defaultexcludtagsqueryparametername;
             int level = dexp.DYN_level;
             List<string> tags = dexp.DYN_tags;
-            JsonSerializerSettings set = new JsonSerializerSettings();
-            if (dexp.DYN_deserializationmappings != null)
-                set.ContractResolver = new MappedContractResolver((Dictionary<Type, Type>)dexp.DYN_deserializationmappings);
-
-
-            RestClient cl = new RestClient(def.BasePath);
-            Tuple<string, object> tup = ProcessPath(def.RestAttribute.Route, def, parameters);
-            RestRequest req = new RestRequest(tup.Item1, def.RestAttribute.Verb.ToMethod());
+            Request request = ProcessPath(def.RestAttribute.Route, def, parameters);
             if (level != int.MaxValue)
-                req.AddQueryParameter(defaultlevelqueryparametername, level.ToString());
+                request.AddQueryParamater(defaultlevelqueryparametername, level.ToString());
             if (tags != null && tags.Count > 0)
-                req.AddQueryParameter(defaultexcludtagsqueryparametername, string.Join("'", tags));
-            if (tup.Item2 != null)
-                req.AddJsonBody(tup.Item2);
-            req.RequestFormat = DataFormat.Json;   
-            return new Tuple<RestRequest, RestClient, JsonSerializerSettings>(req,cl,set);
-        }
-
-        private static Tuple<Uri, byte[], Verbs> CreateStreamRequest(dynamic dexp, MethodDefinition def, dynamic[] parameters)
-        {
-            string defaultlevelqueryparametername = dexp.DYN_defaultlevelqueryparametername;
-            string defaultexcludtagsqueryparametername = dexp.DYN_defaultexcludtagsqueryparametername;
-            int level = dexp.DYN_level;
-            List<string> tags = dexp.DYN_tags;
-            JsonSerializerSettings set = new JsonSerializerSettings {ReferenceLoopHandling = ReferenceLoopHandling.Serialize};
+                request.AddQueryParamater(defaultexcludtagsqueryparametername, string.Join(",", tags));
+            request.SerializerSettings = new JsonSerializerSettings();
             if (dexp.DYN_deserializationmappings != null)
-                set.ContractResolver = new MappedContractResolver((Dictionary<Type, Type>)dexp.DYN_deserializationmappings);
-            RestClient cl = new RestClient(def.BasePath);
-            Tuple<string, object> tup = ProcessPath(def.RestAttribute.Route, def, parameters);
-            RestRequest req = new RestRequest(tup.Item1, def.RestAttribute.Verb.ToMethod());
-            if (level != int.MaxValue)
-                req.AddQueryParameter(defaultlevelqueryparametername, level.ToString());
-            if (tags != null && tags.Count > 0)
-                req.AddQueryParameter(defaultexcludtagsqueryparametername, string.Join("'", tags));
-            Uri uri = cl.BuildUri(req);
-            byte[] data = null;
-            if (tup.Item2 != null)
-                data=Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(tup.Item2));
-            return new Tuple<Uri, byte[], Verbs>(uri,data,def.RestAttribute.Verb);
+                request.SerializerSettings.ContractResolver = new MappedContractResolver((Dictionary<Type, Type>)dexp.DYN_deserializationmappings);
+            request.Timeout = TimeSpan.FromSeconds(dexp.DYN_defaulttimeoutinseconds);
+            return request;
         }
-        private static dynamic ProcessReturn(JsonSerializerSettings set, IRestResponse ret, Type returntype)
-        {
-            if (ret.ResponseStatus != ResponseStatus.Completed)
-                throw new RestClientException(ret.StatusCode, ret.ErrorMessage, ret.Content);
-            return JsonConvert.DeserializeObject(ret.Content, returntype, set);
-        }
-
-
 
         private static Regex rpath=new Regex("\\{(.*?)\\}",RegexOptions.Compiled);
         private static Regex options = new Regex("\\((.*?)\\)", RegexOptions.Compiled);
 
         //TODO It only support Nancy constrains except version and optional parameters, others types should be added.
 
-        private static Tuple<string, object> ProcessPath(string path, MethodDefinition def, dynamic[] parameters)
+        private static Request ProcessPath(string path, MethodDefinition def, dynamic[] parameters)
         {
-            List<Helpers.Parameter> pars=new List<Helpers.Parameter>();
+            List<Parameter> pars=new List<Parameter>();
             MatchCollection collection = rpath.Matches(path);
             foreach (Match m in collection)
             {
                 if (m.Success)
                 {
                     string value = m.Groups[1].Value;
-                    Helpers.Parameter p = new Helpers.Parameter();
+                    Parameter p = new Parameter();
                     p.Original = value;
                     bool optional = false;
                     string constraint = null;
@@ -341,7 +264,7 @@ namespace Nancy.Rest.Client
                     pars.Add(p);
                 }
             }
-            foreach (Helpers.Parameter p in pars)
+            foreach (Parameter p in pars)
             {
                 path = path.Replace("{" + p.Original + "}", p.Value);
             }
@@ -357,7 +280,13 @@ namespace Nancy.Rest.Client
             }
             else if (bodyitems.Count == 1)
                 body = parameters[bodyitems[0]];
-            return new Tuple<string, object>(path,body);
+            Request r=new Request();
+            r.Path = path;
+            r.BaseUri = new Uri(def.BasePath);
+            r.BodyObject = body;
+            r.Method = def.RestAttribute.Verb.ToHttpMethod();
+            r.ReturnType = def.ReturnType;
+            return r;
         }
     }
 }
