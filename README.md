@@ -10,7 +10,11 @@ It is recommended you read the  [Nancy.Rest.Module](https://github.com/maxpiva/N
 
 ## Installation
 
-Add [Nancy.Rest.Client](https://github.com/maxpiva/Nancy.Rest.Client) and [Nancy.Rest.Annotations](https://github.com/maxpiva/Nancy.Rest.Annotations) to your client project.
+* Add [Nancy.Rest.Client](https://github.com/maxpiva/Nancy.Rest.Client) and [Nancy.Rest.Annotations](https://github.com/maxpiva/Nancy.Rest.Annotations) to your client project.
+
+Or 
+
+* Add the Nuget package [Nancy.Rest.Client](https://www.nuget.org/packages/Nancy.Rest.Client/)
 
 Add your server models and interface with the method signatures to use.
 
@@ -192,7 +196,7 @@ namespace Nancy.Rest.ExampleClient
 
 ##WARNING
 
-THIS IS AN ALPHA VERSION, use at your own risk.
+THIS IS AN BETA VERSION, so far it works on my machine ;)
 
 ## TODO
 
@@ -200,6 +204,7 @@ THIS IS AN ALPHA VERSION, use at your own risk.
 
 ## History
 
+**1.4.3-Beta**: Removed bugs, published nugets.
 **1.4.3-Alpha**: First Release
 
 ## Built With
