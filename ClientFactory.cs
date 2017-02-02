@@ -33,6 +33,8 @@ namespace Nancy.Rest.Client
                     s = s.Substring(1);
                 path = path + "/" + s;
             }
+            if (!path.EndsWith("/"))
+                path = path + "/";
             return Create<T>(path, int.MaxValue, null, deserializationmappings,defaultlevelqueryparametername, defaultexcludtagsqueryparametername,defaulttimeoutinseconds);
         }
         private static T Create<T>(string path, int level, IEnumerable<string> tags, Dictionary<Type, Type> deserializationmappings, string defaultlevelqueryparametername, string defaultexcludtagsqueryparametername, int defaulttimeoutinseconds,bool filter=true) where T: class
@@ -186,7 +188,7 @@ namespace Nancy.Rest.Client
                 request.AddQueryParamater(defaultlevelqueryparametername, level.ToString());
             if (tags != null && tags.Count > 0)
                 request.AddQueryParamater(defaultexcludtagsqueryparametername, string.Join(",", tags));
-            request.SerializerSettings = new JsonSerializerSettings();
+            request.SerializerSettings = new JsonSerializerSettings{ReferenceLoopHandling = ReferenceLoopHandling.Serialize};;
             if (dexp.DYN_deserializationmappings != null)
                 request.SerializerSettings.ContractResolver = new MappedContractResolver((Dictionary<Type, Type>)dexp.DYN_deserializationmappings);
             request.Timeout = TimeSpan.FromSeconds(dexp.DYN_defaulttimeoutinseconds);
@@ -235,7 +237,9 @@ namespace Nancy.Rest.Client
                         throw new Exception("Unable to find parameter '" + value + "' in method with route : " + def.RestAttribute.Route);
                     p.Name = tx.Item1;
                     dynamic par = parameters[def.Parameters.IndexOf(tx)];
-                    if (constraint != null)
+                    if (par == null && optional)
+                        p.Value = string.Empty;
+                    else if (constraint != null)
                     {
                         ParameterType type = ParameterType.InstanceTypes.FirstOrDefault(a => a.Name == constraint);
                         if (type==null)

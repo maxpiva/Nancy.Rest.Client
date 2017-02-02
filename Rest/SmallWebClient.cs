@@ -26,7 +26,7 @@ namespace Nancy.Rest.Client.Rest
                 client.BaseAddress = req.BaseUri;
                 client.Timeout = req.Timeout;
                 HttpRequestMessage request = new HttpRequestMessage(req.Method, req.Path);
-                request.Content.Headers.Add("Accept", accept);
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(accept));
                 if (req.BodyObject != null)
                 {
                     if (req.BodyObject.GetType().IsAssignableFrom(typeof(Stream)))
@@ -49,7 +49,16 @@ namespace Nancy.Rest.Client.Rest
                 }
                 if (returnasstream)
                     return await response.Content.ReadAsStreamAsync();
-                return JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync(), req.ReturnType, req.SerializerSettings);
+                try
+                {
+                    return JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync(), req.ReturnType, req.SerializerSettings);
+
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    throw;
+                }
             }
         }
     }
