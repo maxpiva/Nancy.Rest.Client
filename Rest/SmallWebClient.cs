@@ -37,7 +37,9 @@ namespace Nancy.Rest.Client.Rest
                     else
                     {
                         request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
-                        request.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(req.BodyObject, Formatting.None)));
+                        string str = JsonConvert.SerializeObject(req.BodyObject, Formatting.None);
+                        if (!string.IsNullOrEmpty(str))
+                            request.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(str));
                     }
                 }
                 HttpResponseMessage response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
@@ -49,16 +51,9 @@ namespace Nancy.Rest.Client.Rest
                 }
                 if (returnasstream)
                     return await response.Content.ReadAsStreamAsync();
-                try
-                {
-                    return JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync(), req.ReturnType, req.SerializerSettings);
-
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                    throw;
-                }
+                if (req.ReturnType == typeof(void))
+                    return null;
+                return JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync(), req.ReturnType, req.SerializerSettings);
             }
         }
     }
