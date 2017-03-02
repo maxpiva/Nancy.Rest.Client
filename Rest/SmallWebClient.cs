@@ -31,15 +31,17 @@ namespace Nancy.Rest.Client.Rest
                 {
                     if (req.BodyObject.GetType().IsAssignableFrom(typeof(Stream)))
                     {
+                        request.Content = new StreamContent((Stream) req.BodyObject);
                         request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/octet-stream");
-                        request.Content= new StreamContent((Stream)req.BodyObject);
                     }
                     else
                     {
-                        request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
                         string str = JsonConvert.SerializeObject(req.BodyObject, Formatting.None);
                         if (!string.IsNullOrEmpty(str))
+                        {
                             request.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(str));
+                            request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+                        }
                     }
                 }
                 HttpResponseMessage response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
