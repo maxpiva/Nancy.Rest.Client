@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Web;
 using ImpromptuInterface;
 using ImpromptuInterface.Dynamic;
 using Nancy.Rest.Annotations.Atributes;
@@ -238,7 +239,8 @@ namespace Nancy.Rest.Client
                     p.Name = tx.Item1;
                     dynamic par = parameters[def.Parameters.IndexOf(tx)];
                     if (par == null && optional)
-                        p.Value = string.Empty;
+                        // we don't want to keep an invalid, optional param. we'd end up with ?name1=value1&opt=&opt2=value2
+                        continue;
                     else if (constraint != null)
                     {
                         ParameterType type = ParameterType.InstanceTypes.FirstOrDefault(a => a.Name == constraint);
@@ -263,14 +265,14 @@ namespace Nancy.Rest.Client
                             else
                                 throw new Exception("Unable to convert parameter '" + value + "' to string");
                         }
-  
                     }
                     pars.Add(p);
                 }
             }
             foreach (Parameter p in pars)
             {
-                path = path.Replace("{" + p.Original + "}", p.Value);
+                // URLEncode shouldn't cause any issues, but it will hopefully prevent some
+                path = path.Replace("{" + p.Original + "}", HttpUtility.UrlEncode(p.Value));
             }
             List<string> names = pars.Select(a => a.Name).ToList();
             List<int> bodyitems = def.Parameters.Where(a => !names.Contains(a.Item1)).Select(a => def.Parameters.IndexOf(a)).ToList();
