@@ -18,6 +18,10 @@ namespace Nancy.Rest.Client.Rest
         public bool IsWWWFormUrlencoded { get; set; }
         public void AddQueryParamater(string name, string value)
         {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException("The query parameter name cannot be NULL or empty.");
+            if (string.IsNullOrEmpty(value))
+                throw new ArgumentNullException("The query parameter value cannot be NULL or empty.");
             string separator = "&";
             if (!Path.Contains("?"))
                 separator = "?";
