@@ -15,7 +15,7 @@ namespace Nancy.Rest.Client.Rest
         public JsonSerializerSettings SerializerSettings { get; set; }
         public Type ReturnType { get; set; }
         public TimeSpan Timeout { get; set; }
-
+        public bool IsWWWFormUrlencoded { get; set; }
         public void AddQueryParamater(string name, string value)
         {
             string separator = "&";

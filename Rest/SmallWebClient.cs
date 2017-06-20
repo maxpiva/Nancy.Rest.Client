@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -12,9 +13,15 @@ namespace Nancy.Rest.Client.Rest
     public class SmallWebClient
     {
 
-        public static async Task<object> RestRequest(Request req)
+        public static async Task<object> RestRequest(Request req, IWebProxy proxy)
         {
-            using (var client = new HttpClient())
+            HttpClientHandler handler=new HttpClientHandler();
+            if (proxy != null)
+            {
+                handler.Proxy = proxy;
+                handler.UseProxy = true;
+            }
+            using (var client = new HttpClient(handler, true))
             {
                 bool returnasstream = false;
                 string accept = "application/json";
@@ -34,8 +41,13 @@ namespace Nancy.Rest.Client.Rest
                         request.Content = new StreamContent((Stream) req.BodyObject);
                         request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/octet-stream");
                     }
-                    else
+                    else if (req.IsWWWFormUrlencoded)
                     {
+                        request.Content = new StringContent((string)req.BodyObject,Encoding.UTF8);
+                        request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/x-www-form-urlencoded");
+                    }
+                    else
+                    {                        
                         string str = JsonConvert.SerializeObject(req.BodyObject, Formatting.None);
                         if (!string.IsNullOrEmpty(str))
                         {

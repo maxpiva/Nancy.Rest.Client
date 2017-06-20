@@ -4,9 +4,12 @@ using System.ComponentModel;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Web;
 using ImpromptuInterface;
 using ImpromptuInterface.Dynamic;
 using Nancy.Rest.Annotations.Atributes;
@@ -21,7 +24,7 @@ namespace Nancy.Rest.Client
     public class ClientFactory
     {
 
-        public static T Create<T>(string path, Dictionary<Type, Type> deserializationmappings=null, string defaultlevelqueryparametername="level", string defaultexcludtagsqueryparametername="excludetags", int defaulttimeoutinseconds=60) where T : class
+        public static T Create<T>(string path, Dictionary<Type, Type> deserializationmappings=null, string defaultlevelqueryparametername="level", string defaultexcludtagsqueryparametername="excludetags", int defaulttimeoutinseconds=60, IWebProxy proxy=null) where T : class
         {
             List<RestBasePath> paths = typeof(T).GetCustomAttributesFromInterfaces<RestBasePath>().ToList();
             if (paths.Count > 0)
@@ -37,7 +40,7 @@ namespace Nancy.Rest.Client
                 path = path + "/";
             return Create<T>(path, int.MaxValue, null, deserializationmappings,defaultlevelqueryparametername, defaultexcludtagsqueryparametername,defaulttimeoutinseconds);
         }
-        private static T Create<T>(string path, int level, IEnumerable<string> tags, Dictionary<Type, Type> deserializationmappings, string defaultlevelqueryparametername, string defaultexcludtagsqueryparametername, int defaulttimeoutinseconds,bool filter=true) where T: class
+        private static T Create<T>(string path, int level, IEnumerable<string> tags, Dictionary<Type, Type> deserializationmappings, string defaultlevelqueryparametername, string defaultexcludtagsqueryparametername, int defaulttimeoutinseconds,bool filter=true, IWebProxy proxy=null) where T: class
         {
             dynamic dexp = new ExpandoObject();
 
@@ -80,31 +83,31 @@ namespace Nancy.Rest.Client
                         switch (defs.Parameters.Count)
                         {
                             case 0:
-                                exp[m.Name] = Return<dynamic>.Arguments(() => DoAsyncClient(dexp, defs));
+                                exp[m.Name] = Return<dynamic>.Arguments(() => DoAsyncClient(dexp,defs, proxy));
                                 break;
                             case 1:
-                                exp[m.Name] = Return<dynamic>.Arguments<dynamic>((a) => DoAsyncClient(dexp, defs, a));
+                                exp[m.Name] = Return<dynamic>.Arguments<dynamic>((a) => DoAsyncClient(dexp, defs, proxy, a));
                                 break;
                             case 2:
-                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic>((a, b) => DoAsyncClient(dexp, defs, a, b));
+                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic>((a, b) => DoAsyncClient(dexp, defs, proxy, a, b));
                                 break;
                             case 3:
-                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic, dynamic>((a, b, c) => DoAsyncClient(dexp, defs, a, b, c));
+                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic, dynamic>((a, b, c) => DoAsyncClient(dexp, defs, proxy, a, b, c));
                                 break;
                             case 4:
-                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic, dynamic, dynamic>((a, b, c, d) => DoAsyncClient(dexp, defs, a, b, c, d));
+                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic, dynamic, dynamic>((a, b, c, d) => DoAsyncClient(dexp, defs, proxy, a, b, c, d));
                                 break;
                             case 5:
-                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic, dynamic, dynamic, dynamic>((a, b, c, d, e) => DoAsyncClient(dexp, defs, a, b, c, d, e));
+                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic, dynamic, dynamic, dynamic>((a, b, c, d, e) => DoAsyncClient(dexp, defs, proxy, a, b, c, d, e));
                                 break;
                             case 6:
-                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic>((a, b, c, d, e, f) => DoAsyncClient(dexp, defs, a, b, c, d, e, f));
+                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic>((a, b, c, d, e, f) => DoAsyncClient(dexp, defs, proxy, a, b, c, d, e, f));
                                 break;
                             case 7:
-                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic>((a, b, c, d, e, f, g) => DoAsyncClient(dexp, defs, a, b, c, d, e, f, g));
+                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic>((a, b, c, d, e, f, g) => DoAsyncClient(dexp, defs, proxy, a, b, c, d, e, f, g));
                                 break;
                             case 8:
-                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic>((a, b, c, d, e, f, g, h) => DoAsyncClient(dexp, defs, a, b, c, d, e, f, g, h));
+                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic>((a, b, c, d, e, f, g, h) => DoAsyncClient(dexp, defs, proxy, a, b, c, d, e, f, g, h));
                                 break;
                             default:
                                 throw new NotImplementedException("It only support till 8 parameters feel free to add more here :O");
@@ -115,31 +118,31 @@ namespace Nancy.Rest.Client
                         switch (defs.Parameters.Count)
                         {
                             case 0:
-                                exp[m.Name] = Return<dynamic>.Arguments(() => DoSyncClient(dexp, defs));
+                                exp[m.Name] = Return<dynamic>.Arguments(() => DoSyncClient(dexp, defs, proxy));
                                 break;
                             case 1:
-                                exp[m.Name] = Return<dynamic>.Arguments<dynamic>((a) => DoSyncClient(dexp, defs, a));
+                                exp[m.Name] = Return<dynamic>.Arguments<dynamic>((a) => DoSyncClient(dexp, defs, proxy, a));
                                 break;
                             case 2:
-                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic>((a, b) => DoSyncClient(dexp, defs, a, b));
+                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic>((a, b) => DoSyncClient(dexp, defs, proxy, a, b));
                                 break;
                             case 3:
-                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic, dynamic>((a, b, c) => DoSyncClient(dexp, defs, a, b, c));
+                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic, dynamic>((a, b, c) => DoSyncClient(dexp, defs, proxy, a, b, c));
                                 break;
                             case 4:
-                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic, dynamic, dynamic>((a, b, c, d) => DoSyncClient(dexp, defs, a, b, c, d));
+                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic, dynamic, dynamic>((a, b, c, d) => DoSyncClient(dexp, defs, proxy, a, b, c, d));
                                 break;
                             case 5:
-                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic, dynamic, dynamic, dynamic>((a, b, c, d, e) => DoSyncClient(dexp, defs, a, b, c, d, e));
+                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic, dynamic, dynamic, dynamic>((a, b, c, d, e) => DoSyncClient(dexp, defs, proxy, a, b, c, d, e));
                                 break;
                             case 6:
-                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic>((a, b, c, d, e, f) => DoSyncClient(dexp, defs, a, b, c, d, e, f));
+                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic>((a, b, c, d, e, f) => DoSyncClient(dexp, defs, proxy, a, b, c, d, e, f));
                                 break;
                             case 7:
-                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic>((a, b, c, d, e, f, g) => DoSyncClient(dexp, defs, a, b, c, d, e, f, g));
+                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic>((a, b, c, d, e, f, g) => DoSyncClient(dexp, defs, proxy, a, b, c, d, e, f, g));
                                 break;
                             case 8:
-                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic>((a, b, c, d, e, f, g, h) => DoSyncClient(dexp, defs, a, b, c, d, e, f, g, h));
+                                exp[m.Name] = Return<dynamic>.Arguments<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic>((a, b, c, d, e, f, g, h) => DoSyncClient(dexp, defs, proxy, a, b, c, d, e, f, g, h));
                                 break;
                             default:
                                 throw new NotImplementedException("It only support till 8 parameters feel free to add more here :O");
@@ -166,15 +169,15 @@ namespace Nancy.Rest.Client
             return inter;
         }
 
-        private static dynamic DoSyncClient(dynamic dexp, MethodDefinition def, params dynamic[] parameters)
+        private static dynamic DoSyncClient(dynamic dexp, MethodDefinition def, IWebProxy proxy, params dynamic[] parameters)
         {
             Request req = CreateRequest(dexp, def, parameters);
-            return Task.Run(async () => await SmallWebClient.RestRequest(req)).Result;
+            return Task.Run(async () => await SmallWebClient.RestRequest(req,proxy)).Result;
         }
-        private static async Task<dynamic> DoAsyncClient(dynamic dexp, MethodDefinition def, params dynamic[] parameters)
+        private static async Task<dynamic> DoAsyncClient(dynamic dexp, MethodDefinition def, IWebProxy proxy, params dynamic[] parameters)
         {
             Request req = CreateRequest(dexp, def, parameters);
-            return await SmallWebClient.RestRequest(req);
+            return await SmallWebClient.RestRequest(req,proxy);
         }
 
         private static Request CreateRequest(dynamic dexp, MethodDefinition def, dynamic[] parameters)
@@ -275,16 +278,36 @@ namespace Nancy.Rest.Client
             List<string> names = pars.Select(a => a.Name).ToList();
             List<int> bodyitems = def.Parameters.Where(a => !names.Contains(a.Item1)).Select(a => def.Parameters.IndexOf(a)).ToList();
             object body = null;
-            if (bodyitems.Count > 1)
+            bool processbody = bodyitems.Count > 0;
+
+            if (bodyitems.Count == 1)
             {
-                Dictionary<string, object> bjson=new Dictionary<string, object>();
-                foreach(int p in bodyitems)
-                    bjson.Add(def.Parameters[p].Item1,parameters[p]);
-                body = bjson;
+                Type t= parameters[bodyitems[0]].GetType();
+                if (!(t.IsValueType || typeof(string) == t))
+                {
+                    body = parameters[bodyitems[0]];
+                    processbody = false;
+                }
             }
-            else if (bodyitems.Count == 1)
-                body = parameters[bodyitems[0]];
-            Request r=new Request();
+            Request r = new Request();
+            if (processbody)
+            {
+                StringBuilder bld=new StringBuilder();
+                foreach (int p in bodyitems)
+                {
+                    if (bld.Length > 0)
+                        bld.Append("&");
+                    bld.Append(HttpUtility.UrlEncode(def.Parameters[p].Item1));
+                    bld.Append("=");
+                    TypeConverter c = TypeDescriptor.GetConverter(parameters[p].GetType());
+                    if (c.CanConvertTo(typeof(string)))
+                        bld.Append(HttpUtility.UrlEncode(c.ConvertToInvariantString(parameters[p])));
+                    else
+                        throw new Exception("Unable to convert parameter '" + def.Parameters[p].Item1 + "' to string");
+                }
+                body = bld.ToString();
+                r.IsWWWFormUrlencoded = true;
+            }
             r.Path = path;
             r.BaseUri = new Uri(def.BasePath);
             r.BodyObject = body;
