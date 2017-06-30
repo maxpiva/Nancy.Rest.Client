@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
+using System.Web.UI.WebControls.WebParts;
 using ImpromptuInterface;
 using ImpromptuInterface.Dynamic;
 using Nancy.Rest.Annotations.Atributes;
@@ -239,10 +240,9 @@ namespace Nancy.Rest.Client
                     if (tx == null)
                         throw new Exception("Unable to find parameter '" + value + "' in method with route : " + def.RestAttribute.Route);
                     p.Name = tx.Item1;
-                    dynamic par = parameters[def.Parameters.IndexOf(tx)];
+                    dynamic par = parameters==null ? null : parameters[def.Parameters.IndexOf(tx)];
                     if (par == null && optional)
-                        // we don't want to keep an invalid, optional param. we'd end up with ?name1=value1&opt=&opt2=value2
-                        continue;
+                        p.Value = string.Empty;
                     else if (constraint != null)
                     {
                         ParameterType type = ParameterType.InstanceTypes.FirstOrDefault(a => a.Name == constraint);
