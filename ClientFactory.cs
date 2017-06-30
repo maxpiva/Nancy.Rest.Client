@@ -240,7 +240,7 @@ namespace Nancy.Rest.Client
                     if (tx == null)
                         throw new Exception("Unable to find parameter '" + value + "' in method with route : " + def.RestAttribute.Route);
                     p.Name = tx.Item1;
-                    dynamic par = parameters==null ? null : parameters[def.Parameters.IndexOf(tx)];
+                    dynamic par = parameters?[def.Parameters.IndexOf(tx)];
                     if (par == null && optional)
                         p.Value = string.Empty;
                     else if (constraint != null)

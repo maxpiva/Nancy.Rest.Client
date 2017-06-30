@@ -13,7 +13,7 @@ namespace Nancy.Rest.Client.Rest
     public class SmallWebClient
     {
 
-        public static async Task<object> RestRequest(Request req, IWebProxy proxy)
+        public static async Task<object> RestRequest(Request req, IWebProxy proxy=null)
         {
             HttpClientHandler handler=new HttpClientHandler();
             if (proxy != null)
