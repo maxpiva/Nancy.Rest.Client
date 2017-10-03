@@ -195,7 +195,9 @@ namespace Nancy.Rest.Client
             request.SerializerSettings = new JsonSerializerSettings{ReferenceLoopHandling = ReferenceLoopHandling.Serialize};;
             if (dexp.DYN_deserializationmappings != null)
                 request.SerializerSettings.ContractResolver = new MappedContractResolver((Dictionary<Type, Type>)dexp.DYN_deserializationmappings);
-            request.Timeout = TimeSpan.FromSeconds(dexp.DYN_defaulttimeoutinseconds);
+            request.Timeout = def.RestAttribute.TimeOutSeconds == 0
+                ? TimeSpan.FromSeconds(dexp.DYN_defaulttimeoutinseconds)
+                : TimeSpan.FromSeconds(def.RestAttribute.TimeOutSeconds);
             return request;
         }
 
