@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Net;
 using System.Net.Http;
 using System.Web;
-using System.Web.UI;
 using Newtonsoft.Json;
 
 namespace Nancy.Rest.Client.Rest
@@ -16,7 +16,7 @@ namespace Nancy.Rest.Client.Rest
         public Type ReturnType { get; set; }
         public TimeSpan Timeout { get; set; }
         public bool IsWWWFormUrlencoded { get; set; }
-        public void AddQueryParamater(string name, string value)
+        public void AddQueryParameter(string name, string value)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException("The query parameter name cannot be NULL or empty.");
@@ -25,7 +25,7 @@ namespace Nancy.Rest.Client.Rest
             string separator = "&";
             if (!Path.Contains("?"))
                 separator = "?";
-            Path=Path + separator + HttpUtility.UrlEncode(name) + "=" + HttpUtility.UrlEncode(value);
+            Path=Path + separator + WebUtility.UrlEncode(name) + "=" + WebUtility.UrlEncode(value);
         }
     }
 }

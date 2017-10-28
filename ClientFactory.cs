@@ -10,9 +10,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
-using System.Web.UI.WebControls.WebParts;
+using Dynamitey;
 using ImpromptuInterface;
-using ImpromptuInterface.Dynamic;
 using Nancy.Rest.Annotations.Atributes;
 using Nancy.Rest.Client.ContractResolver;
 using Nancy.Rest.Client.Helpers;
@@ -189,9 +188,9 @@ namespace Nancy.Rest.Client
             List<string> tags = dexp.DYN_tags;
             Request request = ProcessPath(def.RestAttribute.Route, def, parameters);
             if (level != int.MaxValue)
-                request.AddQueryParamater(defaultlevelqueryparametername, level.ToString());
+                request.AddQueryParameter(defaultlevelqueryparametername, level.ToString());
             if (tags != null && tags.Count > 0)
-                request.AddQueryParamater(defaultexcludtagsqueryparametername, string.Join(",", tags));
+                request.AddQueryParameter(defaultexcludtagsqueryparametername, string.Join(",", tags));
             request.SerializerSettings = new JsonSerializerSettings{ReferenceLoopHandling = ReferenceLoopHandling.Serialize};;
             if (dexp.DYN_deserializationmappings != null)
                 request.SerializerSettings.ContractResolver = new MappedContractResolver((Dictionary<Type, Type>)dexp.DYN_deserializationmappings);
@@ -276,7 +275,7 @@ namespace Nancy.Rest.Client
             foreach (Parameter p in pars)
             {
                 // URLEncode shouldn't cause any issues, but it will hopefully prevent some
-                path = path.Replace("{" + p.Original + "}", HttpUtility.UrlEncode(p.Value));
+                path = path.Replace("{" + p.Original + "}", WebUtility.UrlEncode(p.Value));
             }
             List<string> names = pars.Select(a => a.Name).ToList();
             List<int> bodyitems = def.Parameters.Where(a => !names.Contains(a.Item1)).Select(a => def.Parameters.IndexOf(a)).ToList();
@@ -300,11 +299,11 @@ namespace Nancy.Rest.Client
                 {
                     if (bld.Length > 0)
                         bld.Append("&");
-                    bld.Append(HttpUtility.UrlEncode(def.Parameters[p].Item1));
+                    bld.Append(WebUtility.UrlEncode(def.Parameters[p].Item1));
                     bld.Append("=");
                     TypeConverter c = TypeDescriptor.GetConverter(parameters[p].GetType());
                     if (c.CanConvertTo(typeof(string)))
-                        bld.Append(HttpUtility.UrlEncode(c.ConvertToInvariantString(parameters[p])));
+                        bld.Append(WebUtility.UrlEncode(c.ConvertToInvariantString(parameters[p])));
                     else
                         throw new Exception("Unable to convert parameter '" + def.Parameters[p].Item1 + "' to string");
                 }
