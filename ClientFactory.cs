@@ -9,11 +9,9 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Web;
-using System.Web.UI.WebControls.WebParts;
+using Dynamitey;
 using ImpromptuInterface;
-using ImpromptuInterface.Dynamic;
-using Nancy.Rest.Annotations.Atributes;
+using Nancy.Rest.Annotations.Attributes;
 using Nancy.Rest.Client.ContractResolver;
 using Nancy.Rest.Client.Helpers;
 using Nancy.Rest.Client.Rest;
@@ -67,14 +65,17 @@ namespace Nancy.Rest.Client
             ifaces.AddRange(typeof(T).GetInterfaces());
             foreach (MethodInfo m in ifaces.SelectMany(a=>a.GetMethods()))
             {
-                List<Annotations.Atributes.Rest> rests = m.GetCustomAttributes<Annotations.Atributes.Rest>().ToList();
+                List<Annotations.Attributes.Rest> rests = m.GetCustomAttributes<Annotations.Attributes.Rest>().ToList();
                 if (rests.Count > 0)
                 {
-                    MethodDefinition defs = new MethodDefinition();
-                    defs.RestAttribute = rests[0];
-                    defs.BasePath = path;
-                    defs.Parameters = m.GetParameters().Select(a => new Tuple<string, Type>(a.Name, a.ParameterType)).ToList();
-                    defs.ReturnType = m.ReturnType;
+                    MethodDefinition defs = new MethodDefinition
+                    {
+                        RestAttribute = rests[0],
+                        BasePath = path,
+                        Parameters = m.GetParameters().Select(a => new Tuple<string, Type>(a.Name, a.ParameterType))
+                            .ToList(),
+                        ReturnType = m.ReturnType
+                    };
                     if (hasfilterinterface && (m.Name == "FilterWithLevel" || m.Name== "FilterWithTags" || m.Name== "FilterWithLevelAndTags"))
                         continue;
 
@@ -276,7 +277,7 @@ namespace Nancy.Rest.Client
             foreach (Parameter p in pars)
             {
                 // URLEncode shouldn't cause any issues, but it will hopefully prevent some
-                path = path.Replace("{" + p.Original + "}", HttpUtility.UrlEncode(p.Value));
+                path = path.Replace("{" + p.Original + "}", WebUtility.UrlEncode(p.Value));
             }
             List<string> names = pars.Select(a => a.Name).ToList();
             List<int> bodyitems = def.Parameters.Where(a => !names.Contains(a.Item1)).Select(a => def.Parameters.IndexOf(a)).ToList();
@@ -300,11 +301,11 @@ namespace Nancy.Rest.Client
                 {
                     if (bld.Length > 0)
                         bld.Append("&");
-                    bld.Append(HttpUtility.UrlEncode(def.Parameters[p].Item1));
+                    bld.Append(WebUtility.UrlEncode(def.Parameters[p].Item1));
                     bld.Append("=");
                     TypeConverter c = TypeDescriptor.GetConverter(parameters[p].GetType());
                     if (c.CanConvertTo(typeof(string)))
-                        bld.Append(HttpUtility.UrlEncode(c.ConvertToInvariantString(parameters[p])));
+                        bld.Append(WebUtility.UrlEncode(c.ConvertToInvariantString(parameters[p])));
                     else
                         throw new Exception("Unable to convert parameter '" + def.Parameters[p].Item1 + "' to string");
                 }

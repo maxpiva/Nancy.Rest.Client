@@ -1,7 +1,6 @@
 ﻿using System;
+using System.Net;
 using System.Net.Http;
-using System.Web;
-using System.Web.UI;
 using Newtonsoft.Json;
 
 namespace Nancy.Rest.Client.Rest
@@ -25,7 +24,7 @@ namespace Nancy.Rest.Client.Rest
             string separator = "&";
             if (!Path.Contains("?"))
                 separator = "?";
-            Path=Path + separator + HttpUtility.UrlEncode(name) + "=" + HttpUtility.UrlEncode(value);
+            Path=Path + separator + WebUtility.UrlEncode(name) + "=" + WebUtility.UrlEncode(value);
         }
     }
 }
